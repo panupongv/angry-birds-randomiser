@@ -20,6 +20,7 @@ class RandomApp:
         self.background = pygame.image.load("zbg.png")
 
         self.font = pygame.font.Font("font.ttf", 40)
+        self.small_font = pygame.font.Font("font.ttf", 25)
 
         self.name = ""
         self.quick_mode = False
@@ -33,14 +34,17 @@ class RandomApp:
         self.bird_index = 4
 
         self.name_list = [[], [], [], []]
+        self.latest = []
+        self.color_map = {0:[255, 0, 0], 1:[0, 0, 0], 2:[0, 0, 255], 3:[0, 255, 0]}
 
         self.center_x = self.screen_width / 2
         self.center_y = self.screen_height / 2
         self.bird_x = self.screen_width * 2 / 3
         self.text_x = self.screen_width / 5
-        self.text_y = self.center_y - 30
+        self.text_y = self.screen_height / 4
         self.BIRD_NUM = 4
         self.MAX_DELAY = 18
+        self.LATEST_DISPLAY_NUM = 8
 
     def run(self):
         while True:
@@ -55,9 +59,13 @@ class RandomApp:
         self.window.blit(current_bird,
                          [self.bird_x - (current_bird.get_rect().width/2),
                           self.center_y - (current_bird.get_rect().height/2)])
-        rendered = self.font.render(self.name, True, [0, 0, 0])
+        rendered = self.font.render(self.name, True, [255, 140, 140])
         self.window.blit(rendered, [self.text_x - (rendered.get_rect().width / 2),
                                     self.text_y])
+        for i in range(min(len(self.latest), self.LATEST_DISPLAY_NUM)):
+            rendered = self.small_font.render(self.latest[i][0], True, self.latest[i][1])
+            self.window.blit(rendered, [self.text_x - (rendered.get_rect().width / 2),
+                                    self.text_y + 20 + 40 * (i + 1)])
         self.window.blit(self.quick_image[self.quick_mode], [0, 0])
         pygame.display.update()
 
@@ -87,6 +95,9 @@ class RandomApp:
         if self.randomed == 2:
             randomed_index = self.min_index()
             self.randomed = 0
+        elif len(self.name_list[self.max_index()]) - \
+                                 len(self.name_list[self.min_index()]) >= 3:
+            randomed_index = self.min_index()
         else:
             randomed_index = random.randrange(self.BIRD_NUM)
         if self.quick_mode:
@@ -111,7 +122,6 @@ class RandomApp:
             self.add_name()
             self.in_queue = False
             
-
         self.current_delay -= 1
 
     def process_key(self, key):
@@ -119,11 +129,12 @@ class RandomApp:
             return
         if key == 8:
             self.name = self.name[:-1]
-        elif chr(key).isalpha():
+        elif key in range(97, 123):
             self.name += chr(key)
 
     def add_name(self):
         self.name_list[self.bird_index].append(self.name)
+        self.latest.insert(0, (self.name, self.color_map[self.bird_index]))
         self.name = ""
         self.randomed += 1
 
